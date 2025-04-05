@@ -1,20 +1,14 @@
 
 import React from 'react';
 import PageHeader from '@/components/ui/PageHeader';
-import { Home, Trophy, Users, ArrowUp, ArrowDown, BarChart3 } from 'lucide-react';
+import { Home, Trophy, Users, ArrowUp, BarChart3 } from 'lucide-react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import RatingChart from './RatingChart';
 import PlayerStats from './PlayerStats';
 import { Player } from '../players/PlayersPage';
-
-// Mock data - would normally come from Supabase
-const mockPlayers: Player[] = [
-  { id: '1', name: 'John Smith', rating: 1240, matches_played: 24, win_rate: 0.58 },
-  { id: '2', name: 'Sarah Johnson', rating: 1120, matches_played: 18, win_rate: 0.50 },
-  { id: '3', name: 'David Lee', rating: 1350, matches_played: 32, win_rate: 0.63 },
-  { id: '4', name: 'Emily Chen', rating: 1400, matches_played: 41, win_rate: 0.71 },
-  { id: '5', name: 'Michael Wong', rating: 1280, matches_played: 28, win_rate: 0.60 },
-];
+import { supabase } from '@/integrations/supabase/client';
+import { useQuery } from '@tanstack/react-query';
+import { toast } from 'sonner';
 
 // Sample rating history data - in a real app, this would come from the backend
 const ratingHistoryData = [
@@ -26,15 +20,64 @@ const ratingHistoryData = [
 ];
 
 const DashboardPage: React.FC = () => {
+  // Fetch players from Supabase
+  const { data: players, isLoading, error } = useQuery({
+    queryKey: ['players'],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from('players')
+        .select('*')
+        .order('rating', { ascending: false });
+      
+      if (error) {
+        console.error('Error fetching players:', error);
+        toast.error('Failed to load players');
+        throw error;
+      }
+      
+      return data as Player[];
+    }
+  });
+
   // Calculate stats
-  const totalPlayers = mockPlayers.length;
-  const totalMatches = mockPlayers.reduce((sum, p) => sum + p.matches_played, 0) / 2;
-  const averageRating = Math.round(
-    mockPlayers.reduce((sum, p) => sum + p.rating, 0) / totalPlayers
-  );
+  const totalPlayers = players?.length || 0;
+  const totalMatches = players?.reduce((sum, p) => sum + p.matches_played, 0) / 2 || 0;
+  const averageRating = totalPlayers > 0
+    ? Math.round(players?.reduce((sum, p) => sum + p.rating, 0) / totalPlayers)
+    : 0;
   
   // Top player by rating
-  const topPlayer = [...mockPlayers].sort((a, b) => b.rating - a.rating)[0];
+  const topPlayer = players && players.length > 0
+    ? players[0]
+    : { name: 'No players', rating: 0 };
+
+  if (isLoading) {
+    return (
+      <div className="page-container">
+        <PageHeader 
+          title="Dashboard" 
+          description="Club statistics and player performance"
+          icon={<Home size={32} />}
+        />
+        <div className="text-center py-8">Loading dashboard data...</div>
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="page-container">
+        <PageHeader 
+          title="Dashboard" 
+          description="Club statistics and player performance"
+          icon={<Home size={32} />}
+        />
+        <div className="text-center text-red-500 py-8">
+          Error loading dashboard data. Please refresh the page.
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="page-container">
@@ -54,7 +97,7 @@ const DashboardPage: React.FC = () => {
         
         <StatCard 
           title="Total Matches"
-          value={totalMatches.toString()}
+          value={Math.floor(totalMatches).toString()}
           description="Recorded matches"
           icon={<Trophy className="h-5 w-5 text-yellow-500" />}
         />
@@ -98,7 +141,7 @@ const DashboardPage: React.FC = () => {
               </CardDescription>
             </CardHeader>
             <CardContent>
-              <PlayerStats players={mockPlayers} />
+              <PlayerStats players={players || []} />
             </CardContent>
           </Card>
         </div>
