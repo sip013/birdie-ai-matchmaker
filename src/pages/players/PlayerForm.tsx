@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useForm } from 'react-hook-form';
@@ -45,7 +44,11 @@ const PlayerForm: React.FC<PlayerFormProps> = ({ onAddPlayer }) => {
   });
 
   function onSubmit(values: PlayerFormValues) {
-    onAddPlayer(values);
+    onAddPlayer({
+      name: values.name,
+      age: values.age,
+      position: values.position
+    });
     form.reset();
   }
 
