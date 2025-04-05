@@ -45,16 +45,23 @@ const PlayersPage: React.FC = () => {
   // Mutation for adding a new player
   const addPlayerMutation = useMutation({
     mutationFn: async (newPlayer: Omit<Player, 'id' | 'win_rate' | 'matches_played' | 'rating' | 'wins'>) => {
-      // Get current authenticated user ID if available
-      const { data: { user } } = await supabase.auth.getUser();
+      // Get current session to check authentication
+      const { data: { session } } = await supabase.auth.getSession();
       
+      if (!session) {
+        toast.error('You must be logged in to add players');
+        throw new Error('Authentication required');
+      }
+
       const playerToInsert = {
         name: newPlayer.name,
         age: newPlayer.age,
         position: newPlayer.position,
-        wins: 0, // Add the missing wins property
-        // Include user_id if the user is authenticated
-        ...(user && { user_id: user.id })
+        wins: 0,
+        matches_played: 0,
+        rating: 1000, // Default starting rating
+        win_rate: 0,
+        user_id: session.user.id
       };
 
       const { data, error } = await supabase
@@ -77,7 +84,13 @@ const PlayersPage: React.FC = () => {
     },
     onError: (error) => {
       console.error('Failed to add player:', error);
-      toast.error('Failed to add player');
+      
+      // Check if error is due to authentication
+      if (error.message === 'Authentication required') {
+        toast.error('You must be logged in to add players');
+      } else {
+        toast.error('Failed to add player: ' + error.message);
+      }
     }
   });
 
