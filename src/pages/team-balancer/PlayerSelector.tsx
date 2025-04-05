@@ -9,6 +9,7 @@ import {
   CommandGroup,
   CommandInput,
   CommandItem,
+  CommandList,
 } from '@/components/ui/command';
 import {
   Popover,
@@ -63,26 +64,28 @@ const PlayerSelector: React.FC<PlayerSelectorProps> = ({
         <PopoverContent className="w-full p-0">
           <Command>
             <CommandInput placeholder="Search players..." />
-            <CommandEmpty>No player found.</CommandEmpty>
-            <CommandGroup>
-              {players.map((player) => (
-                <CommandItem
-                  key={player.id}
-                  value={player.id}
-                  onSelect={() => {
-                    togglePlayer(player.id);
-                  }}
-                >
-                  <Check
-                    className={cn(
-                      "mr-2 h-4 w-4",
-                      selectedPlayerIds.includes(player.id) ? "opacity-100" : "opacity-0"
-                    )}
-                  />
-                  {player.name} - {Math.round(player.rating)} rating
-                </CommandItem>
-              ))}
-            </CommandGroup>
+            <CommandList>
+              <CommandEmpty>No player found.</CommandEmpty>
+              <CommandGroup>
+                {players.map((player) => (
+                  <CommandItem
+                    key={player.id}
+                    value={player.id}
+                    onSelect={() => {
+                      togglePlayer(player.id);
+                    }}
+                  >
+                    <Check
+                      className={cn(
+                        "mr-2 h-4 w-4",
+                        selectedPlayerIds.includes(player.id) ? "opacity-100" : "opacity-0"
+                      )}
+                    />
+                    {player.name} - {Math.round(player.rating)} rating
+                  </CommandItem>
+                ))}
+              </CommandGroup>
+            </CommandList>
           </Command>
         </PopoverContent>
       </Popover>
