@@ -1,8 +1,8 @@
+
 import React, { useState } from 'react';
 import PageHeader from '@/components/ui/PageHeader';
 import { Scale } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import { Card } from '@/components/ui/card';
 import PlayerSelector from './PlayerSelector';
 import TeamCard from './TeamCard';
 import { Player } from '../players/PlayersPage';
@@ -78,6 +78,34 @@ const TeamBalancerPage: React.FC = () => {
     return team.reduce((sum, player) => sum + player.rating, 0);
   };
 
+  // Calculate win probability for each team
+  const calculateWinProbability = (teamARating: number, teamBRating: number) => {
+    const totalRating = teamARating + teamBRating;
+    if (totalRating === 0) return 0.5;
+    
+    const teamAProbability = teamARating / totalRating;
+    return teamAProbability;
+  };
+
+  // Prepare team data objects with all required properties
+  const teamAData = {
+    players: teamA,
+    totalRating: calculateTeamRating(teamA),
+    winProbability: calculateWinProbability(
+      calculateTeamRating(teamA), 
+      calculateTeamRating(teamB)
+    )
+  };
+
+  const teamBData = {
+    players: teamB,
+    totalRating: calculateTeamRating(teamB),
+    winProbability: calculateWinProbability(
+      calculateTeamRating(teamB), 
+      calculateTeamRating(teamA)
+    )
+  };
+
   return (
     <div className="page-container">
       <PageHeader 
@@ -98,14 +126,14 @@ const TeamBalancerPage: React.FC = () => {
               </div>
             ) : (
               <PlayerSelector
-                players={players}
-                selectedPlayers={selectedPlayers}
+                players={players || []}
+                selectedPlayerIds={selectedPlayers}
                 onSelectPlayers={handleSelectPlayers}
               />
             )}
             <Button 
               onClick={balanceTeams}
-              disabled={!isBalanced && selectedPlayers.length < 2}
+              disabled={selectedPlayers.length < 2}
               className="w-full mt-4"
             >
               Balance Teams
@@ -115,15 +143,13 @@ const TeamBalancerPage: React.FC = () => {
 
         <div className="space-y-4">
           <TeamCard 
-            title="Team A"
-            players={teamA}
-            teamRating={calculateTeamRating(teamA)}
+            team={teamAData}
+            name="Team A"
             color="badminton-blue"
           />
           <TeamCard 
-            title="Team B"
-            players={teamB}
-            teamRating={calculateTeamRating(teamB)}
+            team={teamBData}
+            name="Team B"
             color="badminton-yellow"
           />
         </div>
