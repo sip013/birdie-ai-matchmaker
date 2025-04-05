@@ -23,34 +23,8 @@ export type Match = {
   winner_team: 'A' | 'B';
 };
 
-const initialMatches: Match[] = [
-  {
-    id: '1',
-    date: new Date(2023, 3, 15),
-    team_a: {
-      players: [mockPlayers[0], mockPlayers[2]],
-      score: 21
-    },
-    team_b: {
-      players: [mockPlayers[1], mockPlayers[3]],
-      score: 18
-    },
-    winner_team: 'A'
-  },
-  {
-    id: '2',
-    date: new Date(2023, 3, 10),
-    team_a: {
-      players: [mockPlayers[2], mockPlayers[4]],
-      score: 19
-    },
-    team_b: {
-      players: [mockPlayers[0], mockPlayers[3]],
-      score: 21
-    },
-    winner_team: 'B'
-  }
-];
+// Initial empty matches array
+const initialMatches: Match[] = [];
 
 const MatchLoggerPage: React.FC = () => {
   const [matches, setMatches] = useState<Match[]>(initialMatches);

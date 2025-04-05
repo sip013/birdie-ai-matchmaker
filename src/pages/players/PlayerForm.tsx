@@ -1,3 +1,4 @@
+
 import React from 'react';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useForm } from 'react-hook-form';
@@ -30,7 +31,7 @@ const formSchema = z.object({
 type PlayerFormValues = z.infer<typeof formSchema>;
 
 interface PlayerFormProps {
-  onAddPlayer: (player: Omit<Player, 'id' | 'win_rate' | 'matches_played' | 'rating'>) => void;
+  onAddPlayer: (player: Omit<Player, 'id' | 'win_rate' | 'matches_played' | 'rating' | 'wins'>) => void;
 }
 
 const PlayerForm: React.FC<PlayerFormProps> = ({ onAddPlayer }) => {

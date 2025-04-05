@@ -1,5 +1,5 @@
 
-import React, { useState, useEffect } from 'react';
+import React from 'react';
 import PageHeader from '@/components/ui/PageHeader';
 import { Users } from 'lucide-react';
 import PlayerForm from './PlayerForm';
@@ -52,6 +52,7 @@ const PlayersPage: React.FC = () => {
         name: newPlayer.name,
         age: newPlayer.age,
         position: newPlayer.position,
+        wins: 0, // Add the missing wins property
         // Include user_id if the user is authenticated
         ...(user && { user_id: user.id })
       };
