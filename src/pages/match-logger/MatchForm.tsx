@@ -12,9 +12,10 @@ import TeamSection from './components/TeamSection';
 interface MatchFormProps {
   players: Player[];
   onLogMatch: (match: Omit<Match, 'id' | 'date'>) => void;
+  isLoading?: boolean;
 }
 
-const MatchForm: React.FC<MatchFormProps> = ({ players, onLogMatch }) => {
+const MatchForm: React.FC<MatchFormProps> = ({ players, onLogMatch, isLoading = false }) => {
   const [teamAPlayers, setTeamAPlayers] = useState<string[]>([]);
   const [teamBPlayers, setTeamBPlayers] = useState<string[]>([]);
   
@@ -96,7 +97,9 @@ const MatchForm: React.FC<MatchFormProps> = ({ players, onLogMatch }) => {
           <p className="text-sm font-medium text-destructive">{form.formState.errors.root.message}</p>
         )}
         
-        <Button type="submit" className="w-full">Log Match</Button>
+        <Button type="submit" className="w-full" disabled={isLoading}>
+          {isLoading ? 'Processing Match...' : 'Log Match'}
+        </Button>
       </form>
     </Form>
   );

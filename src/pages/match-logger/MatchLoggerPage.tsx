@@ -7,7 +7,7 @@ import MatchForm from './MatchForm';
 import RecentMatches from './RecentMatches';
 import { toast } from 'sonner';
 import { supabase } from '@/integrations/supabase/client';
-import { useQuery } from '@tanstack/react-query';
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 
 export type Match = {
   id: string;
@@ -28,6 +28,7 @@ const initialMatches: Match[] = [];
 
 const MatchLoggerPage: React.FC = () => {
   const [matches, setMatches] = useState<Match[]>(initialMatches);
+  const queryClient = useQueryClient();
 
   // Fetch players from Supabase
   const { data: players, isLoading, error } = useQuery({
@@ -48,21 +49,67 @@ const MatchLoggerPage: React.FC = () => {
     }
   });
 
+  // Mutation for logging matches
+  const logMatchMutation = useMutation({
+    mutationFn: async (match: Omit<Match, 'id' | 'date'>) => {
+      // Map team A and B to team 1 and 2
+      const team1PlayerIds = match.team_a.players.map(p => p.id);
+      const team2PlayerIds = match.team_b.players.map(p => p.id);
+      
+      // Create the match in Supabase
+      const matchData = {
+        team1_player1_id: team1PlayerIds[0],
+        team1_player2_id: team1PlayerIds.length > 1 ? team1PlayerIds[1] : null,
+        team2_player1_id: team2PlayerIds[0],
+        team2_player2_id: team2PlayerIds.length > 1 ? team2PlayerIds[1] : null,
+        team1_score: match.team_a.score,
+        team2_score: match.team_b.score,
+        winner: match.winner_team === 'A' ? 'team1' : 'team2',
+        user_id: (await supabase.auth.getUser()).data.user?.id
+      };
+      
+      // Insert match into database
+      const { data: newMatch, error: matchError } = await supabase
+        .from('matches')
+        .insert(matchData)
+        .select()
+        .single();
+      
+      if (matchError) {
+        console.error('Error creating match:', matchError);
+        throw matchError;
+      }
+      
+      // Call the rating update edge function
+      const { error: ratingError } = await supabase.functions.invoke('update-ratings', {
+        body: matchData
+      });
+      
+      if (ratingError) {
+        console.error('Error updating ratings:', ratingError);
+        throw ratingError;
+      }
+      
+      return newMatch;
+    },
+    onSuccess: () => {
+      toast.success('Match logged successfully and ratings updated!', {
+        icon: <Trophy className="h-5 w-5 text-yellow-500" />,
+      });
+      
+      // Invalidate queries to refresh data
+      queryClient.invalidateQueries({ queryKey: ['players'] });
+      queryClient.invalidateQueries({ queryKey: ['matches'] });
+      queryClient.invalidateQueries({ queryKey: ['match_history'] });
+    },
+    onError: (error) => {
+      console.error('Error logging match:', error);
+      toast.error('Failed to log match. Please try again.');
+    }
+  });
+
   const handleLogMatch = (match: Omit<Match, 'id' | 'date'>) => {
-    // In a real app, this would be sent to a backend API to update ratings
-    const newMatch: Match = {
-      ...match,
-      id: Math.random().toString(36).substr(2, 9),
-      date: new Date()
-    };
-
-    setMatches([newMatch, ...matches]);
-    toast.success('Match logged successfully!', {
-      icon: <Trophy className="h-5 w-5 text-yellow-500" />,
-    });
-
-    // TODO: In a future update, we would save this match to Supabase
-    // and update player ratings based on the match result
+    logMatchMutation.mutate(match);
   };
 
   return (
@@ -84,7 +131,11 @@ const MatchLoggerPage: React.FC = () => {
                 Error loading players. Please refresh the page.
               </div>
             ) : (
-              <MatchForm players={players || []} onLogMatch={handleLogMatch} />
+              <MatchForm 
+                players={players || []} 
+                onLogMatch={handleLogMatch} 
+                isLoading={logMatchMutation.isPending}
+              />
             )}
           </div>
         </div>

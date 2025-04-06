@@ -24,40 +24,51 @@ const App = () => (
         <BrowserRouter>
           <Routes>
             <Route path="/auth" element={<AuthPage />} />
+            
             <Route path="/" element={
-              <MainLayout>
-                <DashboardPage />
-              </MainLayout>
+              <ProtectedRoute>
+                <MainLayout>
+                  <DashboardPage />
+                </MainLayout>
+              </ProtectedRoute>
             } />
+            
             <Route path="/players" element={
-              <MainLayout>
-                <ProtectedRoute>
+              <ProtectedRoute>
+                <MainLayout>
                   <PlayersPage />
-                </ProtectedRoute>
-              </MainLayout>
+                </MainLayout>
+              </ProtectedRoute>
             } />
+            
             <Route path="/team-balancer" element={
-              <MainLayout>
-                <ProtectedRoute>
+              <ProtectedRoute>
+                <MainLayout>
                   <TeamBalancerPage />
-                </ProtectedRoute>
-              </MainLayout>
+                </MainLayout>
+              </ProtectedRoute>
             } />
+            
             <Route path="/match-logger" element={
-              <MainLayout>
-                <ProtectedRoute>
+              <ProtectedRoute>
+                <MainLayout>
                   <MatchLoggerPage />
-                </ProtectedRoute>
-              </MainLayout>
+                </MainLayout>
+              </ProtectedRoute>
             } />
+            
             <Route path="/statistics" element={
-              <MainLayout>
-                <ProtectedRoute>
+              <ProtectedRoute>
+                <MainLayout>
                   <StatisticsPage />
-                </ProtectedRoute>
-              </MainLayout>
+                </MainLayout>
+              </ProtectedRoute>
             } />
-            {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
+            
+            {/* Redirect to auth page from root if not logged in */}
+            <Route index element={<Navigate to="/auth" replace />} />
+            
+            {/* Catch-all route */}
             <Route path="*" element={<NotFound />} />
           </Routes>
         </BrowserRouter>

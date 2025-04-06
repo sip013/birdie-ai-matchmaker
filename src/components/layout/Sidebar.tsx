@@ -64,7 +64,7 @@ const Sidebar: React.FC = () => {
           <div className="space-y-4">
             <div className="flex items-center">
               <div className="flex-shrink-0">
-                <div className="h-8 w-8 rounded-full bg-sidebar-primary text-sidebar-primary-foreground flex items-center justify-center">
+                <div className="h-8 w-8 rounded-full bg-primary text-primary-foreground flex items-center justify-center">
                   {user.email?.charAt(0).toUpperCase() || 'U'}
                 </div>
               </div>
@@ -73,13 +73,21 @@ const Sidebar: React.FC = () => {
                 <p className="text-xs opacity-75 truncate">Logged in</p>
               </div>
             </div>
-            <Button variant="outline" className="w-full flex items-center justify-center" onClick={handleSignOut}>
+            <Button 
+              variant="destructive" 
+              className="w-full flex items-center justify-center" 
+              onClick={handleSignOut}
+            >
               <LogOut className="mr-2 h-4 w-4" />
               Sign Out
             </Button>
           </div>
         ) : (
-          <Button variant="outline" className="w-full flex items-center justify-center" onClick={handleSignIn}>
+          <Button 
+            variant="default" 
+            className="w-full flex items-center justify-center" 
+            onClick={handleSignIn}
+          >
             <LogIn className="mr-2 h-4 w-4" />
             Sign In
           </Button>
