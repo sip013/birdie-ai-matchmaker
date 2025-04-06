@@ -10,18 +10,9 @@ import { supabase } from '@/integrations/supabase/client';
 import { useQuery } from '@tanstack/react-query';
 import { toast } from 'sonner';
 
-// Sample rating history data - in a real app, this would come from the backend
-const ratingHistoryData = [
-  { name: 'Apr 1', 'John Smith': 1180, 'Sarah Johnson': 1050, 'David Lee': 1320 },
-  { name: 'Apr 8', 'John Smith': 1210, 'Sarah Johnson': 1080, 'David Lee': 1310 },
-  { name: 'Apr 15', 'John Smith': 1200, 'Sarah Johnson': 1100, 'David Lee': 1330 },
-  { name: 'Apr 22', 'John Smith': 1230, 'Sarah Johnson': 1110, 'David Lee': 1340 },
-  { name: 'Apr 29', 'John Smith': 1240, 'Sarah Johnson': 1120, 'David Lee': 1350 },
-];
-
 const DashboardPage: React.FC = () => {
   // Fetch players from Supabase
-  const { data: players, isLoading, error } = useQuery({
+  const { data: players, isLoading: playersLoading, error: playersError } = useQuery({
     queryKey: ['players'],
     queryFn: async () => {
       const { data, error } = await supabase
@@ -39,6 +30,64 @@ const DashboardPage: React.FC = () => {
     }
   });
 
+  // Fetch match history for rating chart
+  const { data: matchHistory, isLoading: historyLoading, error: historyError } = useQuery({
+    queryKey: ['match_history'],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from('match_history')
+        .select(`
+          id,
+          date,
+          player_id,
+          rating_after,
+          players(name)
+        `)
+        .order('date', { ascending: true });
+      
+      if (error) {
+        console.error('Error fetching match history:', error);
+        toast.error('Failed to load match history');
+        throw error;
+      }
+      
+      return data;
+    }
+  });
+
+  // Process match history data to format required by the chart
+  const formatRatingChartData = () => {
+    if (!matchHistory || matchHistory.length === 0) {
+      // Return empty array or sample data if no match history
+      return [];
+    }
+
+    // Group by date and player
+    const groupedData = matchHistory.reduce((acc: any, entry: any) => {
+      // Format date to show month and day
+      const date = new Date(entry.date);
+      const formattedDate = `${date.toLocaleString('default', { month: 'short' })} ${date.getDate()}`;
+      
+      if (!acc[formattedDate]) {
+        acc[formattedDate] = {};
+      }
+      
+      // Use player name from the joined players table
+      const playerName = entry.players?.name || 'Unknown';
+      acc[formattedDate][playerName] = entry.rating_after;
+      
+      return acc;
+    }, {});
+
+    // Convert to array format needed by RatingChart
+    return Object.entries(groupedData).map(([date, ratings]: [string, any]) => {
+      return {
+        name: date,
+        ...ratings
+      };
+    });
+  };
+
   // Calculate stats
   const totalPlayers = players?.length || 0;
   const totalMatches = players?.reduce((sum, p) => sum + p.matches_played, 0) / 2 || 0;
@@ -50,6 +99,9 @@ const DashboardPage: React.FC = () => {
   const topPlayer = players && players.length > 0
     ? players[0]
     : { name: 'No players', rating: 0 };
+
+  const isLoading = playersLoading || historyLoading;
+  const error = playersError || historyError;
 
   if (isLoading) {
     return (
@@ -78,6 +130,8 @@ const DashboardPage: React.FC = () => {
       </div>
     );
   }
+
+  const ratingChartData = formatRatingChartData();
 
   return (
     <div className="page-container">
@@ -123,11 +177,17 @@ const DashboardPage: React.FC = () => {
             <CardHeader>
               <CardTitle>Player Rating Trends</CardTitle>
               <CardDescription>
-                Rating progression over the last month
+                Rating progression over time
               </CardDescription>
             </CardHeader>
             <CardContent>
-              <RatingChart data={ratingHistoryData} />
+              {ratingChartData.length > 0 ? (
+                <RatingChart data={ratingChartData} />
+              ) : (
+                <div className="text-center py-8 text-muted-foreground">
+                  No match history data available yet
+                </div>
+              )}
             </CardContent>
           </Card>
         </div>

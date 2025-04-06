@@ -22,6 +22,11 @@ const PlayerStats: React.FC<PlayerStatsProps> = ({ players }) => {
         const percentage = ratingRange > 0 
           ? ((player.rating - minRating) / ratingRange) * 100
           : 50;
+        
+        // Calculate win rate percentage ensuring it's always valid
+        const winRatePercent = player.matches_played > 0
+          ? (player.wins / player.matches_played) * 100
+          : 0;
           
         return (
           <div key={player.id} className="space-y-2">
@@ -40,7 +45,7 @@ const PlayerStats: React.FC<PlayerStatsProps> = ({ players }) => {
               <Progress value={percentage} className="h-2" />
               <div className="flex justify-between text-xs text-muted-foreground">
                 <span>{player.matches_played} matches</span>
-                <span>{(player.win_rate * 100).toFixed(0)}% win rate</span>
+                <span>{winRatePercent.toFixed(0)}% win rate</span>
               </div>
             </div>
           </div>

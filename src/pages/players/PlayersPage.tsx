@@ -38,7 +38,20 @@ const PlayersPage: React.FC = () => {
         throw error;
       }
       
-      return data as Player[];
+      // Calculate win rate properly if not already set
+      const playersWithWinRate = data.map(player => {
+        // If matches_played is 0, win_rate should be 0
+        const calculatedWinRate = player.matches_played > 0 
+          ? player.wins / player.matches_played 
+          : 0;
+          
+        return {
+          ...player,
+          win_rate: player.win_rate ?? calculatedWinRate
+        };
+      });
+      
+      return playersWithWinRate as Player[];
     }
   });
 

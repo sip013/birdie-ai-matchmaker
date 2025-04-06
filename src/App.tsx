@@ -9,6 +9,7 @@ import DashboardPage from "./pages/dashboard/DashboardPage";
 import PlayersPage from "./pages/players/PlayersPage";
 import TeamBalancerPage from "./pages/team-balancer/TeamBalancerPage";
 import MatchLoggerPage from "./pages/match-logger/MatchLoggerPage";
+import StatisticsPage from "./pages/statistics/StatisticsPage";
 import AuthPage from "./pages/auth/AuthPage";
 import NotFound from "./pages/NotFound";
 import { AuthProvider } from "./context/AuthContext";
@@ -46,6 +47,13 @@ const App = () => (
               <MainLayout>
                 <ProtectedRoute>
                   <MatchLoggerPage />
+                </ProtectedRoute>
+              </MainLayout>
+            } />
+            <Route path="/statistics" element={
+              <MainLayout>
+                <ProtectedRoute>
+                  <StatisticsPage />
                 </ProtectedRoute>
               </MainLayout>
             } />
