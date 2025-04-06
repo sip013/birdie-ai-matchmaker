@@ -65,8 +65,14 @@ const App = () => (
               </ProtectedRoute>
             } />
             
-            {/* Redirect to auth page from root if not logged in */}
-            <Route index element={<Navigate to="/auth" replace />} />
+            {/* Root path now handles redirection logic */}
+            <Route index element={
+              <ProtectedRoute>
+                <MainLayout>
+                  <DashboardPage />
+                </MainLayout>
+              </ProtectedRoute>
+            } />
             
             {/* Catch-all route */}
             <Route path="*" element={<NotFound />} />

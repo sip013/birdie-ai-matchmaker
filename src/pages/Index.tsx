@@ -5,16 +5,18 @@ import { useAuth } from '@/context/AuthContext';
 
 const Index = () => {
   const navigate = useNavigate();
-  const { user } = useAuth();
+  const { user, isLoading } = useAuth();
 
   useEffect(() => {
-    // Redirect to dashboard or auth based on user status
-    if (user) {
-      navigate('/');
-    } else {
-      navigate('/auth');
+    // Only redirect when auth state is determined (not loading)
+    if (!isLoading) {
+      if (user) {
+        navigate('/');
+      } else {
+        navigate('/auth');
+      }
     }
-  }, [user, navigate]);
+  }, [user, navigate, isLoading]);
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-gray-100">
