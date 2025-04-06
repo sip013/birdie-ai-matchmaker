@@ -16,7 +16,7 @@ interface TeamCardProps {
 const TeamCard: React.FC<TeamCardProps> = ({ team, name, color }) => {
   if (!team.players || team.players.length === 0) {
     return (
-      <div className={`badminton-card ${color} opacity-70`}>
+      <div className={`${color === 'team-card-a' ? 'team-card-a' : 'team-card-b'} opacity-70`}>
         <h3 className="text-lg font-semibold mb-2">{name}</h3>
         <p className="text-gray-500">No players selected</p>
       </div>
@@ -26,7 +26,7 @@ const TeamCard: React.FC<TeamCardProps> = ({ team, name, color }) => {
   const winProbabilityPercent = Math.round(team.winProbability * 100);
 
   return (
-    <div className={`badminton-card ${color}`}>
+    <div className={color === 'team-card-a' ? 'team-card-a' : 'team-card-b'}>
       <div className="flex justify-between items-center mb-4">
         <h3 className="text-lg font-semibold">{name}</h3>
         <div className="flex items-center gap-2">

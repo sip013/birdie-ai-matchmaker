@@ -30,6 +30,7 @@ interface MatchData {
   team1_score: number;
   team2_score: number;
   winner: string;
+  match_id: string;
 }
 
 serve(async (req) => {
@@ -41,10 +42,20 @@ serve(async (req) => {
   try {
     const supabaseUrl = Deno.env.get("SUPABASE_URL") || "";
     const supabaseServiceKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") || "";
+    
+    console.log("Supabase URL:", supabaseUrl);
+    console.log("Service role key available:", !!supabaseServiceKey);
+    
+    if (!supabaseUrl || !supabaseServiceKey) {
+      throw new Error("Missing Supabase environment variables");
+    }
+    
     const supabase = createClient(supabaseUrl, supabaseServiceKey);
 
     // Get match data from request
     const matchData: MatchData = await req.json();
+    console.log("Received match data:", matchData);
+    
     const {
       team1_player1_id,
       team1_player2_id,
@@ -52,7 +63,8 @@ serve(async (req) => {
       team2_player2_id,
       team1_score,
       team2_score,
-      winner
+      winner,
+      match_id
     } = matchData;
 
     // Determine winning and losing players based on winner
@@ -67,16 +79,24 @@ serve(async (req) => {
     const winnerScore = winner === "team1" ? team1_score : team2_score;
     const loserScore = winner === "team1" ? team2_score : team1_score;
 
+    console.log("Winner team IDs:", winnerTeamIds);
+    console.log("Loser team IDs:", loserTeamIds);
+
     // Fetch all players involved in this match
     const allPlayerIds = [...winnerTeamIds, ...loserTeamIds] as string[];
+    console.log("Fetching players with IDs:", allPlayerIds);
+    
     const { data: players, error: playersError } = await supabase
       .from("players")
       .select("id, rating, streak_count, last_played_at")
       .in("id", allPlayerIds);
 
     if (playersError) {
+      console.error("Error fetching players:", playersError);
       throw new Error(`Error fetching players: ${playersError.message}`);
     }
+    
+    console.log("Players fetched:", players);
 
     // Process each winner-loser pair
     const now = new Date().toISOString();
@@ -85,15 +105,24 @@ serve(async (req) => {
 
     for (const winnerId of winnerTeamIds) {
       const winner = players.find(p => p.id === winnerId) as Player;
-      if (!winner) continue;
+      if (!winner) {
+        console.error(`Winner player not found: ${winnerId}`);
+        continue;
+      }
 
       for (const loserId of loserTeamIds) {
         const loser = players.find(p => p.id === loserId) as Player;
-        if (!loser) continue;
+        if (!loser) {
+          console.error(`Loser player not found: ${loserId}`);
+          continue;
+        }
 
         // Calculate days inactive
         const daysInactiveWinner = calculateDaysInactive(winner.last_played_at);
         const daysInactiveLoser = calculateDaysInactive(loser.last_played_at);
+
+        console.log(`Winner ${winner.id} days inactive: ${daysInactiveWinner}`);
+        console.log(`Loser ${loser.id} days inactive: ${daysInactiveLoser}`);
 
         // Calculate new ratings
         const ratings = updateRatings(
@@ -105,6 +134,8 @@ serve(async (req) => {
           daysInactiveLoser
         );
 
+        console.log("Rating calculation results:", ratings);
+
         // Update winner
         playerUpdates.push({
           id: winner.id,
@@ -112,8 +143,6 @@ serve(async (req) => {
           streak_count: winner.streak_count !== null 
             ? (ratings.winner.ratingChange > BASE_K * 0.5 ? (winner.streak_count + 1) : 0)
             : (ratings.winner.ratingChange > BASE_K * 0.5 ? 1 : 0),
-          wins: supabase.rpc('increment_wins', { player_id: winner.id }),
-          matches_played: supabase.rpc('increment_matches_played', { player_id: winner.id }),
           last_played_at: now
         });
 
@@ -122,14 +151,13 @@ serve(async (req) => {
           id: loser.id,
           rating: ratings.loser.newRating,
           streak_count: 0,
-          matches_played: supabase.rpc('increment_matches_played', { player_id: loser.id }),
           last_played_at: now
         });
 
         // Create match history entries
         matchHistoryEntries.push({
           player_id: winner.id,
-          match_id: null, // This will be set after match is created
+          match_id: match_id,
           rating_before: winner.rating,
           rating_after: ratings.winner.newRating,
           rating_change: ratings.winner.ratingChange,
@@ -140,7 +168,7 @@ serve(async (req) => {
 
         matchHistoryEntries.push({
           player_id: loser.id,
-          match_id: null, // This will be set after match is created
+          match_id: match_id,
           rating_before: loser.rating,
           rating_after: ratings.loser.newRating,
           rating_change: ratings.loser.ratingChange,
@@ -150,29 +178,50 @@ serve(async (req) => {
         });
       }
     }
+    
+    console.log("Player updates to apply:", playerUpdates);
+    console.log("Match history entries to create:", matchHistoryEntries);
 
     // Batch update players
     for (const update of playerUpdates) {
+      console.log(`Updating player ${update.id}:`, update);
       const { error } = await supabase
         .from("players")
         .update({
           rating: update.rating,
           streak_count: update.streak_count,
           last_played_at: update.last_played_at,
-          matches_played: update.matches_played,
-          wins: update.wins
+          matches_played: supabase.rpc('increment_matches_played', { player_id: update.id }),
+          ...(matchHistoryEntries.find(entry => entry.player_id === update.id && entry.is_winner) 
+              ? { wins: supabase.rpc('increment_wins', { player_id: update.id }) } 
+              : {}),
         })
         .eq("id", update.id);
 
       if (error) {
+        console.error(`Error updating player ${update.id}:`, error);
         throw new Error(`Error updating player ${update.id}: ${error.message}`);
+      }
+    }
+
+    // Insert match history entries
+    if (matchHistoryEntries.length > 0) {
+      const { error: historyError } = await supabase
+        .from("match_history")
+        .insert(matchHistoryEntries);
+
+      if (historyError) {
+        console.error("Error creating match history:", historyError);
+        throw new Error(`Error creating match history: ${historyError.message}`);
       }
     }
 
     return new Response(
       JSON.stringify({
         success: true,
-        message: "Ratings updated successfully"
+        message: "Ratings updated successfully",
+        playerUpdates,
+        matchHistoryEntries
       }),
       {
         headers: {
@@ -183,6 +232,7 @@ serve(async (req) => {
       }
     );
   } catch (error) {
+    console.error("Function error:", error);
     return new Response(
       JSON.stringify({
         success: false,

@@ -33,7 +33,7 @@ const RecentMatches: React.FC<RecentMatchesProps> = ({ matches }) => {
             
             <div className="grid grid-cols-5 gap-4 items-center">
               <div className="col-span-2">
-                <h3 className="font-medium text-badminton-blue">Team A</h3>
+                <h3 className="font-medium text-primary">Team A</h3>
                 <div className="mt-1 space-y-1">
                   {match.team_a.players.map(player => (
                     <div key={player.id} className="text-sm">
@@ -55,7 +55,7 @@ const RecentMatches: React.FC<RecentMatchesProps> = ({ matches }) => {
               </div>
               
               <div className="col-span-2">
-                <h3 className="font-medium text-badminton-yellow">Team B</h3>
+                <h3 className="font-medium text-secondary">Team B</h3>
                 <div className="mt-1 space-y-1">
                   {match.team_b.players.map(player => (
                     <div key={player.id} className="text-sm">
