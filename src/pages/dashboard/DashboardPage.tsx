@@ -10,6 +10,17 @@ import { supabase } from '@/integrations/supabase/client';
 import { useQuery } from '@tanstack/react-query';
 import { toast } from 'sonner';
 
+// Define the match history type
+interface MatchHistoryEntry {
+  id: string;
+  date: string;
+  player_id: string;
+  rating_after: number;
+  players?: {
+    name: string;
+  };
+}
+
 const DashboardPage: React.FC = () => {
   // Fetch players from Supabase
   const { data: players, isLoading: playersLoading, error: playersError } = useQuery({
@@ -34,6 +45,7 @@ const DashboardPage: React.FC = () => {
   const { data: matchHistory, isLoading: historyLoading, error: historyError } = useQuery({
     queryKey: ['match_history'],
     queryFn: async () => {
+      // Using a more generic approach to avoid TypeScript errors
       const { data, error } = await supabase
         .from('match_history')
         .select(`
@@ -43,7 +55,7 @@ const DashboardPage: React.FC = () => {
           rating_after,
           players(name)
         `)
-        .order('date', { ascending: true });
+        .order('date', { ascending: true }) as { data: MatchHistoryEntry[] | null, error: any };
       
       if (error) {
         console.error('Error fetching match history:', error);
@@ -51,7 +63,7 @@ const DashboardPage: React.FC = () => {
         throw error;
       }
       
-      return data;
+      return data || [];
     }
   });
 
@@ -63,7 +75,7 @@ const DashboardPage: React.FC = () => {
     }
 
     // Group by date and player
-    const groupedData = matchHistory.reduce((acc: any, entry: any) => {
+    const groupedData = matchHistory.reduce((acc: Record<string, Record<string, number>>, entry: MatchHistoryEntry) => {
       // Format date to show month and day
       const date = new Date(entry.date);
       const formattedDate = `${date.toLocaleString('default', { month: 'short' })} ${date.getDate()}`;
@@ -80,7 +92,7 @@ const DashboardPage: React.FC = () => {
     }, {});
 
     // Convert to array format needed by RatingChart
-    return Object.entries(groupedData).map(([date, ratings]: [string, any]) => {
+    return Object.entries(groupedData).map(([date, ratings]) => {
       return {
         name: date,
         ...ratings

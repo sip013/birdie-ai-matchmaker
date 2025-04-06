@@ -16,6 +16,30 @@ import PlayerRatingChart from '../dashboard/RatingChart';
 import FierceRivalry from './components/FierceRivalry';
 import TeamSynergy from './components/TeamSynergy';
 
+// Define the types for match history and matches
+interface MatchHistoryEntry {
+  id: string;
+  date: string;
+  player_id: string;
+  rating_after: number;
+  is_winner: boolean;
+  players?: {
+    name: string;
+  };
+}
+
+interface DatabaseMatch {
+  id: string;
+  team1_player1: { id: string; name: string };
+  team1_player2: { id: string; name: string } | null;
+  team2_player1: { id: string; name: string };
+  team2_player2: { id: string; name: string } | null;
+  team1_score: number;
+  team2_score: number;
+  winner: string;
+  created_at: string;
+}
+
 const StatisticsPage: React.FC = () => {
   // Fetch players data
   const { data: players, isLoading: playersLoading } = useQuery({
@@ -50,7 +74,7 @@ const StatisticsPage: React.FC = () => {
           is_winner,
           players(name)
         `)
-        .order('date', { ascending: true });
+        .order('date', { ascending: true }) as { data: MatchHistoryEntry[] | null, error: any };
       
       if (error) {
         console.error('Error fetching match history:', error);
@@ -58,7 +82,7 @@ const StatisticsPage: React.FC = () => {
         throw error;
       }
       
-      return data;
+      return data || [];
     }
   });
 
@@ -69,13 +93,21 @@ const StatisticsPage: React.FC = () => {
       const { data, error } = await supabase
         .from('matches')
         .select(`
-          *,
+          id,
+          team1_player1_id,
+          team1_player2_id,
+          team2_player1_id,
+          team2_player2_id,
+          team1_score,
+          team2_score,
+          winner,
+          created_at,
           team1_player1:team1_player1_id(id, name),
           team1_player2:team1_player2_id(id, name),
           team2_player1:team2_player1_id(id, name),
           team2_player2:team2_player2_id(id, name)
         `)
-        .order('created_at', { ascending: false });
+        .order('created_at', { ascending: false }) as { data: DatabaseMatch[] | null, error: any };
       
       if (error) {
         console.error('Error fetching matches:', error);
@@ -83,16 +115,16 @@ const StatisticsPage: React.FC = () => {
         throw error;
       }
       
-      return data;
+      return data || [];
     }
   });
 
   // Process match history data to format required by the chart
   const formatRatingChartData = () => {
-    if (!matchHistory) return [];
+    if (!matchHistory || matchHistory.length === 0) return [];
 
     // Group by date and player
-    const groupedData = matchHistory.reduce((acc: any, entry: any) => {
+    const groupedData = matchHistory.reduce((acc: Record<string, Record<string, number>>, entry: MatchHistoryEntry) => {
       const date = new Date(entry.date).toLocaleDateString();
       if (!acc[date]) {
         acc[date] = {};
@@ -106,7 +138,7 @@ const StatisticsPage: React.FC = () => {
     }, {});
 
     // Convert to array format needed by RatingChart
-    return Object.entries(groupedData).map(([date, ratings]: [string, any]) => {
+    return Object.entries(groupedData).map(([date, ratings]) => {
       return {
         name: date,
         ...ratings
@@ -171,7 +203,7 @@ const StatisticsPage: React.FC = () => {
             </div>
           </CardHeader>
           <CardContent>
-            <FierceRivalry matches={matches || []} />
+            <FierceRivalry matches={matches} />
           </CardContent>
         </Card>
         
@@ -186,7 +218,7 @@ const StatisticsPage: React.FC = () => {
             </div>
           </CardHeader>
           <CardContent>
-            <TeamSynergy matches={matches || []} />
+            <TeamSynergy matches={matches} />
           </CardContent>
         </Card>
       </div>
