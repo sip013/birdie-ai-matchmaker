@@ -1,8 +1,7 @@
 
 import React from 'react';
 import { Player } from '../players/PlayersPage';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Progress } from '@/components/ui/progress';
+import { Badge } from '@/components/ui/badge';
 
 interface TeamCardProps {
   team: {
@@ -15,51 +14,50 @@ interface TeamCardProps {
 }
 
 const TeamCard: React.FC<TeamCardProps> = ({ team, name, color }) => {
-  const getColorClass = () => {
-    if (color === 'badminton-blue') return 'border-l-badminton-blue';
-    if (color === 'badminton-yellow') return 'border-l-badminton-yellow';
-    return '';
-  };
+  if (!team.players || team.players.length === 0) {
+    return (
+      <div className={`badminton-card ${color} opacity-70`}>
+        <h3 className="text-lg font-semibold mb-2">{name}</h3>
+        <p className="text-gray-500">No players selected</p>
+      </div>
+    );
+  }
+
+  const winProbabilityPercent = Math.round(team.winProbability * 100);
 
   return (
-    <Card className={`overflow-hidden border-l-4 ${getColorClass()} animate-fade-in`}>
-      <CardHeader className="pb-2">
-        <CardTitle className="text-xl flex justify-between items-center">
-          <span>{name}</span>
-          <span className="text-sm font-normal text-muted-foreground">
-            {team.players.length} players
+    <div className={`badminton-card ${color}`}>
+      <div className="flex justify-between items-center mb-4">
+        <h3 className="text-lg font-semibold">{name}</h3>
+        <div className="flex items-center gap-2">
+          <Badge variant={winProbabilityPercent > 50 ? "default" : "secondary"}>
+            {winProbabilityPercent}% Win Chance
+          </Badge>
+          <span className="text-lg font-bold">
+            {team.totalRating.toLocaleString()}
           </span>
-        </CardTitle>
-      </CardHeader>
-      <CardContent>
-        <div className="mb-4">
-          <div className="flex justify-between mb-1">
-            <span className="text-sm font-medium">Win Probability</span>
-            <span className="text-sm font-medium">{(team.winProbability * 100).toFixed(1)}%</span>
+        </div>
+      </div>
+      
+      <div className="divide-y">
+        {team.players.map((player) => (
+          <div key={player.id} className="py-2 flex justify-between items-center">
+            <div>
+              <div className="font-medium">{player.name}</div>
+              <div className="text-sm text-gray-500">
+                {player.position || 'No position'} • {player.matches_played} matches
+              </div>
+            </div>
+            <div className="text-right">
+              <div className="font-semibold">{player.rating}</div>
+              <div className="text-xs">
+                {player.win_rate ? `${Math.round(player.win_rate * 100)}% wins` : 'No matches'}
+              </div>
+            </div>
           </div>
-          <Progress value={team.winProbability * 100} />
-        </div>
-
-        <div className="mb-4">
-          <div className="flex justify-between">
-            <span>Total Rating</span>
-            <span className="font-semibold">{Math.round(team.totalRating)}</span>
-          </div>
-        </div>
-
-        <div className="mt-6">
-          <h3 className="font-semibold mb-2">Players</h3>
-          <ul className="space-y-2">
-            {team.players.map(player => (
-              <li key={player.id} className="flex justify-between items-center py-2 px-3 bg-muted/40 rounded-md">
-                <span>{player.name}</span>
-                <span className="font-medium">{Math.round(player.rating)}</span>
-              </li>
-            ))}
-          </ul>
-        </div>
-      </CardContent>
-    </Card>
+        ))}
+      </div>
+    </div>
   );
 };
 

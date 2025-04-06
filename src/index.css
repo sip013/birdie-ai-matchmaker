@@ -14,13 +14,13 @@
     --popover: 0 0% 100%;
     --popover-foreground: 222.2 84% 4.9%;
 
-    --primary: 122 39% 49%; /* Green #4CAF50 */
+    --primary: 142 76% 36%; /* Emerald Green #18A65D */
     --primary-foreground: 0 0% 100%;
 
-    --secondary: 210 79% 46%; /* Blue #1976D2 */
+    --secondary: 210 79% 46%; /* Bright Blue #1976D2 */
     --secondary-foreground: 0 0% 100%;
 
-    --accent: 45 100% 50%; /* Yellow #FFD700 */
+    --accent: 45 100% 50%; /* Vibrant Yellow #FFD700 */
     --accent-foreground: 222.2 47.4% 11.2%;
 
     --muted: 210 40% 96.1%;
@@ -31,17 +31,17 @@
 
     --border: 214.3 31.8% 91.4%;
     --input: 214.3 31.8% 91.4%;
-    --ring: 122 39% 49%;
+    --ring: 142 76% 36%;
 
     --radius: 0.5rem;
 
-    --sidebar-background: 122 39% 49%;
+    --sidebar-background: 142 76% 36%;
     --sidebar-foreground: 0 0% 100%;
     --sidebar-primary: 40 100% 50%;
     --sidebar-primary-foreground: 0 0% 20%;
-    --sidebar-accent: 122 70% 40%;
+    --sidebar-accent: 142 70% 28%;
     --sidebar-accent-foreground: 0 0% 100%;
-    --sidebar-border: 122 30% 40%;
+    --sidebar-border: 142 50% 30%;
     --sidebar-ring: 210 79% 46%;
   }
 
@@ -55,7 +55,7 @@
     --popover: 222.2 84% 4.9%;
     --popover-foreground: 210 40% 98%;
 
-    --primary: 122 39% 49%;
+    --primary: 142 76% 36%;
     --primary-foreground: 0 0% 100%;
 
     --secondary: 210 79% 46%;
@@ -72,15 +72,15 @@
 
     --border: 217.2 32.6% 17.5%;
     --input: 217.2 32.6% 17.5%;
-    --ring: 122 39% 49%;
+    --ring: 142 76% 36%;
 
-    --sidebar-background: 122 35% 35%;
+    --sidebar-background: 142 60% 25%;
     --sidebar-foreground: 0 0% 100%;
     --sidebar-primary: 40 90% 50%;
     --sidebar-primary-foreground: 0 0% 20%;
-    --sidebar-accent: 122 35% 25%;
+    --sidebar-accent: 142 50% 20%;
     --sidebar-accent-foreground: 0 0% 100%;
-    --sidebar-border: 122 30% 30%;
+    --sidebar-border: 142 40% 20%;
     --sidebar-ring: 210 79% 46%;
   }
 }
@@ -102,5 +102,26 @@
   
   .page-container {
     @apply container mx-auto px-4 py-8 max-w-6xl;
+  }
+  
+  /* Enhanced card styles */
+  .dashboard-card {
+    @apply bg-gradient-to-br from-white to-blue-50 border border-blue-100 rounded-lg p-6 shadow-md hover:shadow-lg transition-all;
+  }
+  
+  .team-card-a {
+    @apply bg-gradient-to-br from-blue-50 to-blue-100 border border-blue-200 rounded-lg p-6 shadow-md;
+  }
+  
+  .team-card-b {
+    @apply bg-gradient-to-br from-amber-50 to-amber-100 border border-amber-200 rounded-lg p-6 shadow-md;
+  }
+  
+  .match-card {
+    @apply bg-gradient-to-br from-white to-emerald-50 border border-emerald-100 rounded-lg p-6 shadow-md;
+  }
+  
+  .stats-card {
+    @apply bg-gradient-to-br from-white to-purple-50 border border-purple-100 rounded-lg p-6 shadow-md;
   }
 }

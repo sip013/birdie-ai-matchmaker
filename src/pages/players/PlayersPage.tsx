@@ -66,6 +66,7 @@ const PlayersPage: React.FC = () => {
         throw new Error('Authentication required');
       }
 
+      // Set default values for new player - note: we're not setting win_rate as it causes issues
       const playerToInsert = {
         name: newPlayer.name,
         age: newPlayer.age,
@@ -73,10 +74,10 @@ const PlayersPage: React.FC = () => {
         wins: 0,
         matches_played: 0,
         rating: 1000, // Default starting rating
-        win_rate: 0,
         user_id: session.user.id
       };
 
+      // Try to insert without the win_rate field
       const { data, error } = await supabase
         .from('players')
         .insert(playerToInsert)
@@ -121,15 +122,15 @@ const PlayersPage: React.FC = () => {
       
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
         <div className="lg:col-span-1">
-          <div className="badminton-card">
-            <h2 className="text-xl font-semibold mb-4">Add New Player</h2>
+          <div className="badminton-card bg-gradient-to-br from-white to-green-50 border border-green-100">
+            <h2 className="text-xl font-semibold mb-4 text-emerald-800">Add New Player</h2>
             <PlayerForm onAddPlayer={handleAddPlayer} />
           </div>
         </div>
         
         <div className="lg:col-span-2">
-          <div className="badminton-card">
-            <h2 className="text-xl font-semibold mb-4">Player Roster</h2>
+          <div className="badminton-card bg-gradient-to-br from-white to-blue-50 border border-blue-100">
+            <h2 className="text-xl font-semibold mb-4 text-blue-800">Player Roster</h2>
             {isLoading ? (
               <div className="text-center py-8">Loading players...</div>
             ) : error ? (

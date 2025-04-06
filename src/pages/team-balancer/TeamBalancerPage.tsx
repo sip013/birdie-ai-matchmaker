@@ -116,10 +116,10 @@ const TeamBalancerPage: React.FC = () => {
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
         <div>
-          <div className="badminton-card">
-            <h2 className="text-xl font-semibold mb-4">Select Players</h2>
+          <div className="badminton-card bg-gradient-to-br from-white to-emerald-50 border border-emerald-100">
+            <h2 className="text-xl font-semibold mb-4 text-emerald-800">Select Players</h2>
             {isLoading ? (
-              <div className="text-center py-8">Loading players...</div>
+              <div className="text-center py-8 text-gray-600">Loading players...</div>
             ) : error ? (
               <div className="text-center text-red-500 py-8">
                 Error loading players. Please refresh the page.
@@ -134,7 +134,7 @@ const TeamBalancerPage: React.FC = () => {
             <Button 
               onClick={balanceTeams}
               disabled={selectedPlayers.length < 2}
-              className="w-full mt-4"
+              className="w-full mt-4 bg-emerald-600 hover:bg-emerald-700"
             >
               Balance Teams
             </Button>
@@ -145,12 +145,12 @@ const TeamBalancerPage: React.FC = () => {
           <TeamCard 
             team={teamAData}
             name="Team A"
-            color="badminton-blue"
+            color="team-card-a"
           />
           <TeamCard 
             team={teamBData}
             name="Team B"
-            color="badminton-yellow"
+            color="team-card-b"
           />
         </div>
       </div>
